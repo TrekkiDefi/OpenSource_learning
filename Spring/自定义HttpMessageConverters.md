@@ -55,11 +55,10 @@ public class WebConfig extends WebMvcConfigurationSupport {
 
 **扩展：**
 ```java
-//spring提供了WebMvcConfigurationSupport的实现类DelegatingWebMvcConfiguration
 public class WebMvcConfigurationSupport implements ApplicationContextAware, ServletContextAware {}
 
 ...
-
+//spring提供了WebMvcConfigurationSupport的实现类DelegatingWebMvcConfiguration
 @Configuration
 public class DelegatingWebMvcConfiguration extends WebMvcConfigurationSupport {}
 ```
