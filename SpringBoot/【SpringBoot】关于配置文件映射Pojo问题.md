@@ -110,5 +110,22 @@ public class PropertiesConfig {
 
 还原上述配置，将配置属性重新放入`project.properties`文件，如何使自定义配置文件生效呢？
 
+参见：[【SpringBoot】SpringBoot1.5以上版本@ConfigurationProperties取消location后的替代方案](https://github.com/itTalks/Anti_pit_guide/blob/master/SpringBoot/%E3%80%90SpringBoot%E3%80%91SpringBoot1.5%E4%BB%A5%E4%B8%8A%E7%89%88%E6%9C%AC%40ConfigurationProperties%E5%8F%96%E6%B6%88location%E5%90%8E%E7%9A%84%E6%9B%BF%E4%BB%A3%E6%96%B9%E6%A1%88.md)
 
+1. 取消`@EnableConfigurationProperties`激活自定义的配置类
+```java
+@Configuration//Spring Boot自动导入该注解注释的配置类
+//@EnableConfigurationProperties(value = ProjectInfo.class)
+public class PropertiesConfig {
+}
+```
+2. 在配置类中采用`@Component`的方式注册为组件，然后使用`@PropertySource`来指定自定义的资源目录
+```java
+@Component
+@ConfigurationProperties(prefix = "project.info")
+@PropertySource("classpath:/project.properties")
+public class ProjectInfo {
+    ...
+}
+```
 
