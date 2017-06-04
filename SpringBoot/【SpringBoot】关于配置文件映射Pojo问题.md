@@ -72,8 +72,8 @@ public class PropertiesTController {
 
 上面的`ProjectInfo`类添加了`@Component`注解，这样才能通过`@Autowired`注入该属性类。
 
-另外一种方式是删除`@Component`注解，并通过JavaConfig配置添加`@EnableConfigurationProperties(value = ProjectInfo.class)`注解，
-这样会自动注册标有该注解的bean。
+另外一种方式是删除属性类`ProjectInfo`的`@Component`注解，并在`JavaConfig`或者`Bean`上添加`@EnableConfigurationProperties(value = ProjectInfo.class)`注解，
+这样Spring Boot检测到`@EnableConfigurationProperties(value = ProjectInfo.class)`注解，会将该注解所指定的类注册为bean。
 
 ```java
 package com.github.ittalks.spring_boot_learning.config.properties;
@@ -104,9 +104,15 @@ import org.springframework.context.annotation.Configuration;
 public class PropertiesConfig {
 }
 ```
-
+或者
+```java
+@Component
+@EnableConfigurationProperties(value = ProjectInfo.class)
+public class PropertiesConfig {
+    
+}
+```
 ---
-
 
 还原上述配置，将配置属性重新放入`project.properties`文件，如何使自定义配置文件生效呢？
 
@@ -114,7 +120,7 @@ public class PropertiesConfig {
 
 1. 取消`@EnableConfigurationProperties`激活自定义的配置类
 ```java
-@Configuration//Spring Boot自动导入该注解注释的配置类
+@Configuration
 //@EnableConfigurationProperties(value = ProjectInfo.class)
 public class PropertiesConfig {
 }
