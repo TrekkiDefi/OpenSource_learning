@@ -13,7 +13,7 @@
 1. 在`@EnableConfigurationProperties`取消激活自定义的配置类（重要）
 2. 在配置类中采用`@Component`的方式注册为组件，然后使用`@PropertySource`来指定自定义的资源目录
 
-![](./images/@ConfigurationProperties_location_2.png)
+![](images/@ConfigurationProperties_location2.png)
 
 ## 总结
 这就是`@ConfigurationProperties`的`location`属性被取消后的一种替代方案,

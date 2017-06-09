@@ -1,7 +1,7 @@
->API官方地址：http://docs.spring.io/spring/docs/current/javadoc-api/org/springframework/web/servlet/config/annotation/WebMvcConfigurationSupport.html
+>API官方地址：<http://docs.spring.io/spring/docs/current/javadoc-api/org/springframework/web/servlet/config/annotation/WebMvcConfigurationSupport.html>
 
-org.springframework.web.servlet.config.annotation
-**Class WebMvcConfigurationSupport**
+org.springframework.web.servlet.config.annotation **Class WebMvcConfigurationSupport**
+
 ```java
 java.lang.Object
     org.springframework.web.servlet.config.annotation.WebMvcConfigurationSupport
@@ -13,16 +13,17 @@ All Implemented Interfaces:
 Direct Known Subclasses:
     DelegatingWebMvcConfiguration
 ```
----
+
 ```java
 public class WebMvcConfigurationSupport
     extends Object
     implements ApplicationContextAware, ServletContextAware
 ```
+这是提供MVC`Java config`背后**配置的主要类**。
 
-这是提供`MVC Java config`背后配置的主要类。 通常**通过将`@EnableWebMvc`添加到应用程序`@Configuration`类来导入**。 
+通常通过将`@EnableWebMvc`添加到应用程序`@Configuration`类来**导入**。
 
-另一种更高级的方式是直接继承此类，并根据需要覆盖方法，记住将`@Configuration`添加到子类，将`@Bean`添加到覆盖的@Bean方法中。 
+另一种更**高级的方式**是**直接继承此类**，并**根据需要覆盖方法**，**记住将`@Configuration`添加到子类**，将@Bean添加到覆盖的@Bean方法中。
 
 有关详细信息，请参阅[@EnableWebMvc](http://docs.spring.io/spring/docs/current/javadoc-api/org/springframework/web/servlet/config/annotation/EnableWebMvc.html)的Javadoc。
 
@@ -59,8 +60,7 @@ public class WebMvcConfigurationSupport
 - 如果在类路径上可用JSR-303实现，[OptionalValidatorFactoryBean](http://docs.spring.io/spring/docs/current/javadoc-api/org/springframework/validation/beanvalidation/OptionalValidatorFactoryBean.html)
 - 一系列的依赖类路径上可用的第三方库的[HttpMessageConverters](http://docs.spring.io/spring/docs/current/javadoc-api/org/springframework/http/converter/HttpMessageConverter.html)。
 
-```
-
+```java
 Since:
     3.1
 Author:

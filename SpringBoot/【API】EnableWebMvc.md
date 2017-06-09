@@ -1,7 +1,6 @@
->官方API地址：http://docs.spring.io/spring/docs/current/javadoc-api/org/springframework/web/servlet/config/annotation/EnableWebMvc.html
+>官方API地址：<http://docs.spring.io/spring/docs/current/javadoc-api/org/springframework/web/servlet/config/annotation/EnableWebMvc.html>
 
-org.springframework.web.servlet.config.annotation
-**Annotation Type EnableWebMvc**
+org.springframework.web.servlet.config.annotation **Annotation Type EnableWebMvc**
 
 ```java
 @Retention(value=RUNTIME)
@@ -10,7 +9,7 @@ org.springframework.web.servlet.config.annotation
 @Import(value=DelegatingWebMvcConfiguration.class)
 public @interface EnableWebMvc
 ```
-将此注释添加到`@Configuration`类会从[WebMvcConfigurationSupport](http://docs.spring.io/spring/docs/current/javadoc-api/org/springframework/web/servlet/config/annotation/WebMvcConfigurationSupport.html)导入Spring MVC配置，例如：
+将此注释添加到`@Configuration`类会从`WebMvcConfigurationSupport`导入Spring MVC配置，例如：
 ```java
 @Configuration
 @EnableWebMvc
@@ -19,9 +18,7 @@ public class MyWebConfiguration {
 
 }
 ```
-
-要自定义导入的配置，实现[WebMvcConfigurer](http://docs.spring.io/spring/docs/current/javadoc-api/org/springframework/web/servlet/config/annotation/WebMvcConfigurer.html)接口或更好的方式是扩展空方法基类[WebMvcConfigurerAdapter](http://docs.spring.io/spring/docs/current/javadoc-api/org/springframework/web/servlet/config/annotation/WebMvcConfigurerAdapter.html)并覆盖单个方法，例如：
-
+要自定义导入的配置，实现`WebMvcConfigurer`接口或更好的方式是扩展空方法基类`WebMvcConfigurerAdapter`并覆盖单个方法，例如：
 ```java
 @Configuration
 @EnableWebMvc
@@ -41,10 +38,8 @@ public class MyConfiguration extends WebMvcConfigurerAdapter {
  // More overridden methods ...
 }
 ```
-
-如果[WebMvcConfigurer](http://docs.spring.io/spring/docs/current/javadoc-api/org/springframework/web/servlet/config/annotation/WebMvcConfigurer.html)未暴露一些需要配置的高级设置，
-请考虑删除`@EnableWebMvc`注释，并直接从[WebMvcConfigurationSupport](http://docs.spring.io/spring/docs/current/javadoc-api/org/springframework/web/servlet/config/annotation/WebMvcConfigurationSupport.html)或[DelegatingWebMvcConfiguration](http://docs.spring.io/spring/docs/current/javadoc-api/org/springframework/web/servlet/config/annotation/DelegatingWebMvcConfiguration.html)扩展，例如：
-
+如果`WebMvcConfigurer`未暴露一些需要配置的高级设置， 请考虑**删除`@EnableWebMvc`注释**，
+并直接从`WebMvcConfigurationSupport`或`DelegatingWebMvcConfiguration`扩展，例如：
 ```java
 @Configuration
 @ComponentScan(basePackageClasses = { MyConfiguration.class })
