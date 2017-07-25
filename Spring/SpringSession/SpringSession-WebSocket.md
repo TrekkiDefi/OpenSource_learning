@@ -4,21 +4,21 @@
 >
 >Last updated 2017-04-27 18:42:57 +00:00
 
-本指南介绍如何使用Spring Session来确保WebSocket消息使您的HttpSession Keep-Alive。
+本指南介绍如何使用Spring Session来确保WebSocket消息使您的 HttpSession 保持活动状态。
 
 >Spring Session的WebSocket支持仅适用于Spring的WebSocket支持。
 >具体来说，它不能直接使用JSR-356。这是因为JSR-356没有用于拦截传入的WebSocket消息的机制。
 
-## HttpSession Setup
+## HttpSession 配置
 第一步是将Spring Session与HttpSession进行整合。
 
 这些步骤已在[HttpSession指南](http://docs.spring.io/spring-session/docs/current/reference/html5/guides/httpsession.html)中概述。
 
 在继续之前，请确保您已经将Spring Session与HttpSession集成。
 
-## Spring Configuration
+## Spring 配置
 在一个典型的Spring WebSocket应用程序中，用户将继承`AbstractWebSocketMessageBrokerConfigurer`。
-      
+
 例如，配置可能如下所示：
 
 ```java
@@ -75,12 +75,13 @@ Spring Session支持中，我们只需要改变两件事情：
 - `SessionRepositoryMessageInterceptor`作为`ChannelInterceptor`添加到我们的`inbound ChannelRegistration`中
     这样可以确保每次接收到`inbound`消息时，我们的Spring Session最后访问的时间将被更新。
 - `WebSocketRegistryListener`被创建为一个Spring Bean
-    这样可以确保我们将所有Session id映射到相应的WebSocket连接。通过维护此映射，当Spring Session（HttpSession）终止时，我们可以关闭所有的WebSocket连接。
+    这样可以确保我们将所有Session id映射到相应的WebSocket连接。
+    通过维护此映射，当Spring Session（HttpSession）终止时，我们可以关闭所有的WebSocket连接。
 
-## websocket Sample Application
+## websocket 示例应用
 websocket示例应用程序演示如何使用Spring Session与WebSockets。
 
-### Running the websocket Sample Application
+### 运行 websocket 示例应用
 您可以通过获取[源代码](https://github.com/spring-projects/spring-session/archive/1.3.1.RELEASE.zip)并调用以下命令来运行示例：
 
 为了测试会话到期，您可能希望通过在启动应用程序之前从以下文件中删除注释来将会话期限更改为1分钟（默认为30分钟）：
@@ -102,12 +103,14 @@ $ ./gradlew :samples:websocket:bootRun
 
 您现在应该可以访问http://localhost:8080/
 
-## Exploring the websocket Sample Application
+## 探索 httpsession 示例应用
 尝试使用该应用程序。使用以下信息认证：
 - Username rob
 - Password password
 
-现在点击**Login**按钮。您现在应该以用户**rob**身份认证。
+现在点击**Login**按钮。
+
+您现在应该以用户**rob**身份认证。
 
 打开匿名窗口并访问http://localhost:8080/
 

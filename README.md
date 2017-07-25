@@ -9,10 +9,9 @@ Spring源码学习笔记
 
 ### [SpringSession](https://github.com/ittalks/OpenSource_learning/tree/master/Spring/SpringSession)
 
-- [【DOC】SpringSession-HttpSession(QuickStart-httpsession-spring-configuration)](https://github.com/ittalks/OpenSource_learning/tree/master/Spring/SpringSession/【DOC】SpringSession-HttpSession(QuickStart-httpsession-spring-configuration).md)
-- [【DOC】SpringSession-HttpSession(QuickStart-httpsession-xml)](https://github.com/ittalks/OpenSource_learning/tree/master/Spring/SpringSession/【DOC】SpringSession-HttpSession(QuickStart-httpsession-xml).md)
-- [【DOC】SpringSession-WebSocket](https://github.com/ittalks/OpenSource_learning/tree/master/Spring/SpringSession/【DOC】SpringSession-WebSocket.md)
-
+- [QuickStart-httpsession-spring-configuration](https://github.com/ittalks/OpenSource_learning/tree/master/Spring/SpringSession/QuickStart-httpsession-spring-configuration.md)
+- [QuickStart-httpsession-xml](https://github.com/ittalks/OpenSource_learning/tree/master/Spring/SpringSession/QuickStart-httpsession-xml.md)
+- [SpringSession-WebSocket](https://github.com/ittalks/OpenSource_learning/tree/master/Spring/SpringSession/SpringSession-WebSocket.md)
 
 ## [SpringBoot](https://github.com/ittalks/OpenSource_learning/tree/master/SpringBoot)
 
