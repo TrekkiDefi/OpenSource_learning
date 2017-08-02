@@ -1,4 +1,4 @@
->官方API地址：<http://docs.spring.io/spring/docs/current/javadoc-api/org/springframework/web/servlet/config/annotation/EnableWebMvc.html>
+>API官方地址：<http://docs.spring.io/spring/docs/current/javadoc-api/org/springframework/web/servlet/config/annotation/EnableWebMvc.html>
 
 org.springframework.web.servlet.config.annotation **Annotation Type EnableWebMvc**
 
