@@ -18,5 +18,7 @@ Spring源码学习笔记
 - [【API】DelegatingWebMvcConfiguration](https://github.com/ittalks/OpenSource_learning/tree/master/SpringBoot/【API】DelegatingWebMvcConfiguration.md)
 - [【API】EnableWebMvc](https://github.com/ittalks/OpenSource_learning/tree/master/SpringBoot/【API】EnableWebMvc.md)
 - [【API】WebMvcConfigurationSupport](https://github.com/ittalks/OpenSource_learning/tree/master/SpringBoot/【API】WebMvcConfigurationSupport.md)
+- [【API】ServletContextInitializer](https://github.com/ittalks/OpenSource_learning/tree/master/SpringBoot/【API】ServletContextInitializer.md)
+- [【API】SpringBootServletInitializer](https://github.com/ittalks/OpenSource_learning/tree/master/SpringBoot/【API】SpringBootServletInitializer.md)
 - [【原理】SpringBoot自动配置原理解析](https://github.com/ittalks/OpenSource_learning/tree/master/SpringBoot/【原理】SpringBoot自动配置原理解析.md)
 - [【原理】SpringBoot之@EnableAutoConfiguration原理及自定义扩展](https://github.com/ittalks/OpenSource_learning/tree/master/SpringBoot/【原理】SpringBoot之@EnableAutoConfiguration原理及自定义扩展.md)
