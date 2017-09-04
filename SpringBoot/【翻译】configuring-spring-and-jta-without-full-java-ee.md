@@ -8,14 +8,14 @@ Spring的事务支持为许多API的事务语义提供了一致的接口。广�
 在JMS中，用户可以创建一个事务处理的会话，发送和接收消息，当消息的工作完成后，调用`Session.commit()`来告诉服务器它可以完成工作。
 在数据库世界中，JDBC Connections默认自动提交查询。这对于一次性语句是很好的，但通常最好将一些相关的语句收集到一个批处理中，然后全部提交它们或者全部不提交。
 在JDBC中，首先将Connection的`setAutoCommit()`方法设置为false，然后在批处理结束时显式调用`Connection.commit()`来执行此操作。
-这两个API和其他许多API都提供了一个`transactional unit-of-work`的概念，它们可能会由客户端自行决定`committed, finalized, flushed`或以其他方式持久化。
+这两个API和其他许多API都提供了一个事务的`unit-of-work`的概念，它们可能会由客户端自行决定`committed, finalized, flushed`或以其他方式持久化。
 API广泛不同，但概念是一样的。
 
 全局事务完全不同。只要您希望多个资源参与到一个事务中，就应该使用它们。
 可能会有这样的需求：也许你想发送一个JMS消息并写入数据库？ 或者，也许你想使用两种不同的JPA持久性上下文？ 
 在全局事务设置中，第三方事务监控器在一个事务中纳入多个事务资源，准备提交
-- 在此阶段，资源通常执行相当于`dry-run`提交
-- 然后最终提交每个资源。
+- 在此阶段，资源通常执行相当于`dry-run`提交；
+- 然后最终提交每个资源；
 
 这些步骤是大多数全局事务实现的基础，被称为两阶段提交（2PC）。如果一个提交失败（就像网络中断），则事务监视器会请求每个资源撤消或回滚最后一个事务。
 
@@ -65,7 +65,8 @@ template.execute( new TransactionCallback<Object>(){
 ```
 
 进一步说，Spring框架通过简单地支持它来为事务中的方法调用
-提供了可靠的基于AOP的支持。通过此支持，您不再需要`TransactionTemplate` - 对于启用声明式事务管理注解的任何方法，事务管理会自动进行。
+提供了可靠的基于AOP的支持。通过此支持，您不再需要`TransactionTemplate`
+- 对于启用声明式事务管理注解的任何方法，事务管理会自动进行。
 
 如果您使用Spring的XML配置，请使用以下命令：
 
@@ -104,10 +105,10 @@ Spring通过名为`JtaTransactionManager`的`PlatformTransactionManager`实现�
 在幕后，Spring可以加载不同的JtaTransactionManager子类，以便在可用时利用不同服务器中的特定功能，
 例如：WebLogicJtaTransactionManager，WebSphereUowTransactionManager和OC4JJTTransactionManager。
 
-因此，如果您在使用Java EE应用程序服务器，但希望使用Spring的JTA支持，则可以使用以下命名空间配置支持正确（并自动）产生`JtaTransactionManager`：
+因此，如果您在使用Java EE应用程序服务器，但希望使用Spring的JTA支持，则可以使用以下命名空间配置支持正确（并自动）构造`JtaTransactionManager`：
 
 ```xml
-<tx:jta-transaction-manager  />
+<tx:jta-transaction-manager />
 ```
 
 或者，您可以根据需要注册JtaTransactionManager bean实例，而不使用构造函数参数，如下所示：
@@ -120,3 +121,4 @@ public PlatformTransactionManager platformTransactionManager(){
 ```
 
 无论哪种方式，JavaEE应用程序服务器的最终结果是，现在可以使用JTA以统一的方式管理事务，这要归功于Spring。
+
