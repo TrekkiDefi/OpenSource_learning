@@ -122,3 +122,206 @@ public PlatformTransactionManager platformTransactionManager(){
 
 无论哪种方式，JavaEE应用程序服务器的最终结果是，现在可以使用JTA以统一的方式管理事务，这要归功于Spring。
 
+## Using Embeddable Transaction Managers
+
+许多人选择在Java EE应用服务器之外使用JTA，原因很明显：Tomcat或Jetty更轻便，更快速，更便宜，更容易测试，业务逻辑通常不会存在于应用服务器中等。
+现在在云服务中，这比以往更重要，其中轻量级，可扩展的资源已经成为标准，而且重量级的单片应用服务器根本无法扩展。
+
+有很多开源和商业的独立的JTA事务管理器。在开源社区，您有像Java Open Transaction Manager（JOTM），JBoss TS，Bitronix Transaction Manager（BTM）和Atomikos等几种选择。
+
+在这篇文章中，我们将介绍一种采用全局事务的简单方法。我们将专注于Atomikos特定的配置，但是还有一个例子演示了在源代码中使用Bitronix的相同配置。
+
+在这个例子中，事务方法是一个简单的基于JPA的服务，它必须同时提交一个JMS消息。代码是典型的在线零售商购物车的假设结帐方法。代码如下所示：
+
+```java
+@Transactional
+public void checkout(long purchaseId) {
+    Purchase purchase = getPurchaseById(purchaseId);
+
+    if (purchase.isFrozen()) 
+      throw new RuntimeException(
+         "you can't check out Purchase(#" + purchase.getId() + ") that's already been checked out!");
+
+    Date purchasedDate = new Date();
+    Set<LineItem> lis = purchase.getLineItems();
+    for (LineItem lineItem : lis) {
+        lineItem.setPurchasedDate(purchasedDate);
+        entityManager.merge(lineItem);
+    }
+    purchase.setFrozen(true);
+
+    this.entityManager.merge(purchase);
+    log.debug("saved purchase updates");
+    
+    this.jmsTemplate.convertAndSend(this.ordersDestinationName, purchase);
+    log.debug("sent partner notification");
+}
+```
+
+该方法使用`@Transactional`注解来告诉Spring将其调用包含在事务中。该方法采用JPA和JMS。
+所以这个工作跨越了两个事务资源，两者之间必须一致：数据库更新操作和JMS发送操作都成功，或者两者都回滚。
+
+为了测试JTA配置是否可用，你可以简单地在最后一行抛出一个RuntimeException，如下所示：
+
+```java
+if (true) throw new RuntimeException("Monkey wrench!");
+```
+
+届时，数据库中的`purchase`实体应将其状态更改为冻结状态，并发送JMS消息。在最后一行抛出的异常将回滚这两个更改。
+Spring的声明式事务管理将拦截异常，并使用配置的`JtaTransactionManager`自动回滚事务。然后，您可以验证这两个事件从未发生，并且它们不会反映在相应的资源中：
+不会将JMS消息加入队列，并且JPA实体的数据库记录不会被更改。 我使用的测试用例是：
+
+```java
+package org.springsource.jta.etailer.store.services;
+
+import org.apache.commons.logging.*;
+import org.junit.*;
+import org.junit.runner.RunWith;
+import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+import org.springframework.test.context.support.AnnotationConfigContextLoader;
+import org.springsource.jta.etailer.store.config.*;
+import org.springsource.jta.etailer.store.domain.*;
+import javax.inject.Inject;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+
+@RunWith(SpringJUnit4ClassRunner.class)
+@ContextConfiguration(loader = AnnotationConfigContextLoader.class,
+       classes = {AtomikosJtaConfiguration.class, StoreConfiguration.class})
+public class JpaDatabaseCustomerOrderServiceTest {
+
+	private Log log = LogFactory.getLog(getClass().getName());
+
+	@Inject private CustomerOrderService customerOrderService;
+	@Inject private CustomerService customerService;
+	@Inject private ProductService productService;
+
+	@Test
+	public void testAddingProductsToCart() throws Exception {
+		Customer customer = customerService.createCustomer("A", "Customer");
+		Purchase purchase = customerOrderService.createPurchase(customer.getId());
+		Product product1 = productService.createProduct(
+                 "Widget1", "a widget that slices (but not dices)", 12.0);
+		Product product2 = productService.createProduct(
+                 "Widget2", "a widget that dices (but not slices)", 7.5);
+		LineItem one = customerOrderService.addProductToPurchase(
+                 purchase.getId(), product1.getId());
+		LineItem two = customerOrderService.addProductToPurchase(
+                 purchase.getId(), product2.getId());
+		purchase = customerOrderService.getPurchaseById(purchase.getId());
+		assertTrue(purchase.getTotal() == (product1.getPrice() + product2.getPrice()));
+		assertEquals(one.getPurchase().getId(), purchase.getId());
+		assertEquals(two.getPurchase().getId(), purchase.getId());
+		// this is the part that requires XA to work correctly
+		customerOrderService.checkout(purchase.getId());
+	}
+}
+```
+
+测试是一个简单的事务脚本：购物者创建一个帐户，找到喜欢的东西，将它们作为订单项添加到购物车中，然后检出。
+结帐方法将购物车的更改状态保存到数据库，然后发送触发JMS消息，通知其他系统有新订单。在这种结帐方法中，JTA是必不可少的。
+
+## Configuring the Basic Services
+
+我们有两个配置类
+- JTA提供程序的特定代码，用于正确构建Spring的JtaTransactionManager实例，
+- 其余的配置将保持静态，无论所选的PlatformTransactionManager策略如何。
+
+我使用Spring的模块化Java配置从其他配置中分离出JTA提供者特定的配置类，因此您可以轻松地在特定于Atomikos的JTA配置和特定于Bitronix的JTA配置之间切换。
+
+我们来看看StoreConfiguration类
+- 它将是一样的，无论你使用哪个事务管理器实现。 
+
+我只摘录了突出的部分，以便您可以看到哪些部分与JTA提供者特定的配置进行交互。
+
+```java
+package org.springsource.jta.etailer.store.config;
+
+import org.hibernate.cfg.ImprovedNamingStrategy;
+import org.hibernate.dialect.MySQL5Dialect;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.ComponentScan;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.dao.annotation.PersistenceExceptionTranslationPostProcessor;
+import org.springframework.jms.core.JmsTemplate;
+import org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean;
+import org.springframework.orm.jpa.vendor.Database;
+import org.springframework.orm.jpa.vendor.HibernateJpaVendorAdapter;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.annotation.EnableTransactionManagement;
+import org.springframework.transaction.jta.JtaTransactionManager;
+import javax.inject.Inject;
+import javax.transaction.TransactionManager;
+import javax.transaction.UserTransaction;
+import java.util.Properties;
+
+@EnableTransactionManagement
+@Configuration
+@ComponentScan(value = "org.springsource.jta.etailer.store.services")
+public class StoreConfiguration {
+
+	// ... 	
+
+	// this is a reference to a specific Java configuration class for JTA 
+	@Inject private AtomikosJtaConfiguration jtaConfiguration ;
+
+	@Bean
+	public JmsTemplate jmsTemplate() throws Throwable{
+		JmsTemplate jmsTemplate = new JmsTemplate(jtaConfiguration.connectionFactory());
+		// ... 
+	}
+
+	@Bean
+	public LocalContainerEntityManagerFactoryBean entityManager () throws Throwable  {
+		LocalContainerEntityManagerFactoryBean entityManager = 
+		   new LocalContainerEntityManagerFactoryBean();		
+		entityManager.setDataSource(jtaConfiguration.dataSource());
+		Properties properties = new Properties();
+		// ... 
+		jtaConfiguration.tailorProperties(properties);
+		entityManager.setJpaProperties(properties);
+		return entityManager;
+	}
+
+	@Bean
+	public PlatformTransactionManager platformTransactionManager()  throws Throwable {
+		return new JtaTransactionManager( 
+                         jtaConfiguration.userTransaction(), jtaConfiguration.transactionManager());
+	}
+}
+```
+
+配置都是样板式代码 - 只是为任何JPA或JMS应用程序配置的普通对象。
+配置类要执行其工作，需要访问`javax.jms.ConnectionFactory`，`javax.sql.DataSource`，`javax.transaction.UserTransaction`和`javax.transaction.TransactionManager`。
+因为满足这些接口的对象的构造是特定于每个事务管理器实现的，所以这些bean定义在一个单独的Java配置类中，我们通过在StoreConfiguration类的顶部使用字段注入（@Inject private AtomikosJtaConfiguration jtaConfiguration）来引入。
+
+我们的StoreConfiguration通过`@EnableTransactionManagement`注释开启自动事务处理。
+
+我们使用Spring 3.1的`@PropertySource`注解（与环境抽象相关联）来访问services.properties中的键和值。 属性文件如下所示：
+
+```properties
+dataSource.url=jdbc:mysql://127.0.0.1/crm
+dataSource.driverClassName=com.mysql.jdbc.Driver
+dataSource.dialect=org.hibernate.dialect.MySQL5InnoDBDialect
+dataSource.user=crm
+dataSource.password=crm
+
+jms.partnernotifications.destination=orders
+jms.broker.url=tcp://localhost:61616
+```
+
+任何JTA配置最终要做的最重要的事是提供用于创建PlatformTransactionManager实例所使用的
+特定于提供者的UserTransaction的引用，以及特定于提供者的TransactionManager的引用，如下所示：
+
+```java
+@Bean	
+public PlatformTransactionManager platformTransactionManager() throws Throwable {
+    UserTransaction userTransaction = jtaConfiguration.userTransaction() ;
+    TransactionManager transactionManager = jtaConfiguration.transactionManager() ;
+    return new JtaTransactionManager(  userTransaction, transactionManager );
+}
+```
+
+## Configuring Atomikos
