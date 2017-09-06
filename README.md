@@ -23,3 +23,4 @@ Spring源码学习笔记
 - [【API】EnableAsync](https://github.com/ittalks/OpenSource_learning/tree/master/SpringBoot/【API】EnableAsync.md)
 - [【原理】SpringBoot自动配置原理解析](https://github.com/ittalks/OpenSource_learning/tree/master/SpringBoot/【原理】SpringBoot自动配置原理解析.md)
 - [【原理】@EnableAutoConfiguration原理及自定义扩展](https://github.com/ittalks/OpenSource_learning/tree/master/SpringBoot/【原理】@EnableAutoConfiguration原理及自定义扩展.md)
+- [【翻译】configuring-spring-and-jta-without-full-java-ee](https://github.com/ittalks/OpenSource_learning/tree/master/SpringBoot/【翻译】configuring-spring-and-jta-without-full-java-ee.md)

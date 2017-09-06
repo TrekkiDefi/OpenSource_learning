@@ -6,7 +6,7 @@ Spring的事务支持为许多API的事务语义提供了一致的接口。广�
 
 本地事务的一些常见示例在JMS和JDBC API中。
 在JMS中，用户可以创建一个事务处理的会话，发送和接收消息，当消息的工作完成后，调用`Session.commit()`来告诉服务器它可以完成工作。
-在数据库世界中，JDBC Connections默认自动提交查询。这对于一次性语句是很好的，但通常最好将一些相关的语句收集到一个批处理中，然后全部提交它们或者全部不提交。
+在数据库世界中，JDBC Connections默认自动提交查询。这对于`one-off`语句是很好的，但通常最好将一些相关的语句收集到一个批处理中，然后全部提交它们或者全部不提交。
 在JDBC中，首先将Connection的`setAutoCommit()`方法设置为false，然后在批处理结束时显式调用`Connection.commit()`来执行此操作。
 这两个API和其他许多API都提供了一个事务的`unit-of-work`的概念，它们可能会由客户端自行决定`committed, finalized, flushed`或以其他方式持久化。
 API广泛不同，但概念是一样的。
@@ -410,20 +410,33 @@ public class AtomikosJtaConfiguration {
 }
 ```
 
-Atomikos提供了自己的`java.sql.DataSource`和`javax.jms.ConnectionFactory`包装器，可将任何本地`java.sql.DataSource`或`javax.jms.ConnectionFactory`修改为JTA（和XA）感知的包。
+Atomikos提供了自己的`java.sql.DataSource`和`javax.jms.ConnectionFactory`包装器，
+可将任何本地`java.sql.DataSource`或`javax.jms.ConnectionFactory`修改为JTA（和XA）感知的包。
 
-要告诉Hibernate如何参与Atomikos事务，我们必须设置一个属性--`hibernate.transaction.manager_lookup_class` - 在这种情况下，该类为`TransactionManagerLookup`。您将需要为任何JTA实现执行此操作。
+要告诉Hibernate如何参与Atomikos事务，我们必须设置一个属性--`hibernate.transaction.manager_lookup_class`
+- 在这种情况下，该类为`TransactionManagerLookup`。
+您将需要为任何JTA实现执行此操作。
 
-最后，我们需要提供一个`javax.transaction.TransactionManager`实现和一个`javax.transaction.UserTransaction`实现。该类顶部的两个Bean是这两个接口的Atomikos实现，用于构建Spring的`JtaTransactionManager`实现，该实现是`PlatformTransactionManager`的一个实现。
+最后，我们需要提供一个`javax.transaction.TransactionManager`实现和一个`javax.transaction.UserTransaction`实现。
+该类顶部的两个Bean是这两个接口的Atomikos实现，用于构建Spring的`JtaTransactionManager`实现，该实现是`PlatformTransactionManager`的一个实现。
 
 `PlatformTransactionManager`实例又由我们的配置类上的`@EnableTransactionManagement`注释自动获取，并且用于在调用了`@Transactional`的任何方法时执行事务。
 
-`javax.transaction.UserTransaction`实现和`javax.transaction.TransactionManager`实现的职责类似：`UserTransaction`是面向用户的API，`TransactionManager`是面向服务器的API。所有JTA实现都指定了`UserTransaction`实现，因为它是JavaEE的最低要求。`TransactionManager`不是必需的，并不总是在每个服务器或JTA实现中都可用。
+`javax.transaction.UserTransaction`实现和`javax.transaction.TransactionManager`实现的职责类似：
+`UserTransaction`是面向用户的API，`TransactionManager`是面向服务器的API。
+所有JTA实现都指定了`UserTransaction`实现，因为它是JavaEE的最低要求。`TransactionManager`不是必需的，并不总是在每个服务器或JTA实现中都可用。
 
-对于熟悉JTA的人来说，使用`UserTransaction`，就像在JavaEE中以编程方式控制事务一样，有一些重大的差距，这可能是可以理解的，因为现在已经过时的假设是在近十年前J2EE首次设想的时候，没有人会想做事务管理没有EJB。
+问题是一些操作，例如挂起事务（例如使用"requires new"语义），只能在`TransactionManager`上。
+该接口在JTA规范中是标准化的，但与`UserTransaction`不同，它不提供众所周知的`JNDI locations`或其他获取的方式。
+其他一些，例如控制隔离级别或服务器特定的"事务命名"（用于监视或其他目的）在JTA中根本不可能。
 
-问题是一些操作，例如挂起事务（例如获取''requires new"语义），只能在`TransactionManager`上。该接口在JTA规范中是标准化的，但与`UserTransaction`不同，它不提供a well-known JNDI location或其他获取的方式。其他一些事情，例如控制隔离级别或服务器特定的"事务命名"（用于监视或其他目的）在JTA中根本不可能。
+`TransactionManager`提供了诸如事务挂起和恢复等高级功能，因此大多数提供商也支持它。
+事实上，很多`javax.transaction.TransactionManager`实现可以在运行时转换为`javax.transaction.UserTransaction`实现。Spring知道这一点，并且对这点很聪明。
+如果您仅使用`javax.transaction.TransactionManager`的引用来定义Spring的`JtaTransactionManager`实现实例，则它将尝试在运行时强制转为javax.transaction.UserTransaction实例。 
+然而，Atomikos不会这样做，因此我们明确定义了一个`javax.transaction.UserTransaction`实例，并且更好地利用了`javax.transaction.TransactionManager`的更强大的功能 - 一个单独的`javax.transaction.TransactionManager`实例。
 
-`TransactionManager`提供了诸如事务挂起和恢复等高级功能，因此大多数提供商也支持它。事实上，很多`javax.transaction.TransactionManager`实现可以在运行时转换为`javax.transaction.UserTransaction`实现。Spring知道这一点，并且对这点很聪明。If you define an instance of Spring’s JtaTransactionManager implementation with only a reference to a javax.transaction.TransactionManager, it will attempt to coerce a javax.transaction.UserTransaction instance out of it at runtime, as well. Atomikos, however, does not do this, and so we explicitly define a javax.transaction.UserTransaction instance and - to take better advantage of the more enhanced capabilities of a javax.transaction.TransactionManager - a separate javax.transaction.TransactionManager instance.
+Bitronix配置看起来类似于满足类似的职责。你不必经常调整这段代码。很可能您可以简单地重复使用此处提供的配置，适当调整连接和驱动程序。
 
-And, that’s it! You can have your cake, and eat it too with Spring. The Bitronix configuration looks similar as it is satisfying similar duties. You won’t have to tweak this code very often. It’s quite likely you can simply reuse the configuration presented here, adjusting the connection strings and drivers as appropriate.
+## Summary
+
+关于使用Spring的基于XA的分布式事务管理的最佳观点，包括对如何以及何时避免这些问题的一些非常好的洞察，请参阅Dave Syer博士关于[Distributed transactions in Spring, with and without XA.](http://www.javaworld.com/javaworld/jw-01-2009/jw-01-spring-transactions.html)的文章。
